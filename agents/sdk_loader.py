@@ -19,10 +19,11 @@ except ImportError:
             self.policies = policies or []
 
     class McpStdioServer:
-        def __init__(self, name, command, args):
+        def __init__(self, name, command, args, env=None):
             self.name = name
             self.command = command
             self.args = args
+            self.env = env
 
     class policy:
         @staticmethod

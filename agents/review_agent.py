@@ -1,5 +1,6 @@
 from agents.sdk_loader import LocalAgentConfig, McpStdioServer, policy
 from tools.web_scout_tools import fetch_reddit_rss_feed
+import config
 
 def get_review_config(api_key: str, model: str) -> LocalAgentConfig:
     """
@@ -19,11 +20,17 @@ def get_review_config(api_key: str, model: str) -> LocalAgentConfig:
         "Do not generate plausible-sounding sentiment, reviews, or opinions that are not directly grounded in real tool output."
     )
     
+    # Inject API key into the subprocess environment if provided
+    mcp_env = None
+    if config.FIRECRAWL_API_KEY:
+        mcp_env = {"FIRECRAWL_API_KEY": config.FIRECRAWL_API_KEY}
+
     # Configure the MCP Stdio Server.
     firecrawl_server = McpStdioServer(
         name="firecrawl-mcp",
         command="npx",
-        args=["-y", "firecrawl-mcp-server"]
+        args=["-y", "firecrawl-mcp-server"],
+        env=mcp_env
     )
     
     return LocalAgentConfig(
