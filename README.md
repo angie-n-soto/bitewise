@@ -73,3 +73,20 @@ Once you have set your API key in `.env`, run the system live:
 ```bash
 python main.py --prompt "I need recommendations for my 7-year-old dog who has a sensitive stomach."
 ```
+
+## Deployment
+
+This project includes a Streamlit web interface (`app.py`) that can be containerized and deployed to Google Cloud Run.
+
+To deploy the container, you can use the following `gcloud` command from the project root:
+
+```bash
+gcloud run deploy bitewise \
+  --source . \
+  --region us-central1 \
+  --set-env-vars AGENT_MODEL=gemini-2.5-flash \
+  --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest \
+  --allow-unauthenticated
+```
+
+> **Note:** The `GEMINI_API_KEY` should be securely stored in Google Cloud Secret Manager rather than passed as a plain environment variable in any real deployment.
