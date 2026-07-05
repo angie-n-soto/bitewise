@@ -16,7 +16,7 @@ graph TD
     
     Scout -->|Tool: search_pet_food_brands| WebSearch[Web Suggestions]
     Vet -->|Tool: search_veterinary_articles| LitSearch[Academic & Vet Literature]
-    Review -->|MCP: Reddit + Firecrawl| SocialScrape[Online Reviews & Forums]
+    Review -->|Tool: Reddit RSS + Firecrawl MCP| SocialScrape[Online Reviews & Forums]
     Nutritionist -->|Tool: analyze_ingredients| IngAnalysis[Ingredient Evaluation]
     Safety -->|Tool: check_pet_food_recalls| RecallCheck[FDA Recall Database]
 ```
@@ -24,7 +24,7 @@ graph TD
 1. **Orchestrator (Main Hub)**: The front-facing agent that interacts with the pet parent, delegates subtasks, and synthesizes the recommendations.
 2. **Scout Agent**: Discovers candidate pet food brands and product lines based on criteria (e.g., senior cats, sensitive stomach dogs).
 3. **Vet Agent**: Researches clinical guidelines, veterinary articles, and academic recommendations.
-4. **Review Agent**: Connects via MCP to Reddit forums and uses Firecrawl to fetch platform reviews, assessing public sentiment.
+4. **Review Agent**: Uses native Python tools to fetch Reddit RSS feeds and an optional Firecrawl MCP server to scrape platform reviews, assessing public sentiment.
 5. **Nutritionist Agent**: Inspects the candidate products' ingredients list to flag fillers, controversial additives, and evaluate macros.
 6. **Safety Agent**: Monituring and checking active/historical FDA recall notices for candidate products.
 
@@ -46,12 +46,14 @@ cp .env.example .env
 Open `.env` and add your **Gemini API Key**:
 ```env
 GEMINI_API_KEY=AIzaSy...
+# Optional: Add Firecrawl API key to enable deep web scraping
+FIRECRAWL_API_KEY=fc-your-key-here
 ```
 
-### 3. Setup MCP Servers (Optional)
-Ensure you have **Node.js** and `npx` configured on your system PATH. The Review Agent runs these servers dynamically in the background:
-- **Reddit MCP Server**: `@modelcontextprotocol/server-reddit`
-- **Firecrawl MCP Server**: `firecrawl-mcp-server`
+### 3. Setup Firecrawl MCP Server (Optional)
+The Review Agent can dynamically spawn a Firecrawl MCP server in the background for deep web scraping. To enable this:
+1. Ensure you have **Node.js** and `npx` installed and configured on your system PATH.
+2. Provide a valid `FIRECRAWL_API_KEY` in your `.env` file. The SDK will automatically pass this to the `firecrawl-mcp-server` subprocess when the agent needs it.
 
 ---
 
