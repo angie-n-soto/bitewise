@@ -74,6 +74,8 @@ async def run_live_pipeline(user_prompt: str):
             for attempt in range(3):
                 try:
                     resp = await scout_agent.chat(query)
+                    async for tc in resp.tool_calls:
+                        print(f"  [Tool Call] {tc.name}({tc.kwargs}) -> {str(tc.result)[:200]}...")
                     text = await resp.text()
                     print(f"[A2A <- Scout Agent] Received suggestions.")
                     return text
@@ -91,6 +93,8 @@ async def run_live_pipeline(user_prompt: str):
             for attempt in range(3):
                 try:
                     resp = await review_agent.chat(f"Gather public reviews and platform sentiment for: {brand_name}")
+                    async for tc in resp.tool_calls:
+                        print(f"  [Tool Call] {tc.name}({tc.kwargs}) -> {str(tc.result)[:200]}...")
                     text = await resp.text()
                     print(f"[A2A <- Review Agent] Gathered reviews.")
                     return text
@@ -108,6 +112,8 @@ async def run_live_pipeline(user_prompt: str):
             for attempt in range(3):
                 try:
                     resp = await vet_agent.chat(topic)
+                    async for tc in resp.tool_calls:
+                        print(f"  [Tool Call] {tc.name}({tc.kwargs}) -> {str(tc.result)[:200]}...")
                     text = await resp.text()
                     print(f"[A2A <- Vet Agent] Gathered vet recommendations.")
                     return text
@@ -125,6 +131,8 @@ async def run_live_pipeline(user_prompt: str):
             for attempt in range(3):
                 try:
                     resp = await nutritionist_agent.chat(f"Pet Profile: {pet_profile}. Analyze ingredients: {ingredient_list}")
+                    async for tc in resp.tool_calls:
+                        print(f"  [Tool Call] {tc.name}({tc.kwargs}) -> {str(tc.result)[:200]}...")
                     text = await resp.text()
                     print(f"[A2A <- Nutritionist Agent] Analysis report ready.")
                     return text
@@ -142,6 +150,8 @@ async def run_live_pipeline(user_prompt: str):
             for attempt in range(3):
                 try:
                     resp = await safety_agent.chat(f"Check recalls for brand: {brand_name}")
+                    async for tc in resp.tool_calls:
+                        print(f"  [Tool Call] {tc.name}({tc.kwargs}) -> {str(tc.result)[:200]}...")
                     text = await resp.text()
                     print(f"[A2A <- Safety Agent] Safety report ready.")
                     return text

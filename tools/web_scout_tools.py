@@ -1,6 +1,7 @@
 import json
 import urllib.request
 import urllib.parse
+import xml.etree.ElementTree as ET
 from typing import List, Dict, Any
 
 def search_pet_food_brands(query: str) -> str:
@@ -148,3 +149,36 @@ def analyze_ingredients(ingredients: str) -> str:
     }
     
     return json.dumps(report, indent=2)
+
+
+def fetch_reddit_rss_feed(subreddit: str) -> str:
+    """
+    Fetch and parse a subreddit RSS feed to gather sentiment and discussions.
+    
+    Args:
+        subreddit: The name of the subreddit (e.g., "DogFood" or "CatFood").
+        
+    Returns:
+        A JSON string containing recent post titles and links, or an error message.
+    """
+    url = f"https://www.reddit.com/r/{subreddit}/.rss"
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) BiteWise/1.0'})
+    
+    try:
+        with urllib.request.urlopen(req) as response:
+            xml_data = response.read()
+            
+        root = ET.fromstring(xml_data)
+        namespace = {'atom': 'http://www.w3.org/2005/Atom'}
+        
+        posts = []
+        for entry in root.findall('atom:entry', namespace):
+            title = entry.find('atom:title', namespace)
+            link = entry.find('atom:link', namespace)
+            if title is not None:
+                posts.append({"title": title.text, "link": link.attrib.get('href', '') if link is not None else ""})
+            if len(posts) >= 10: break
+                
+        return json.dumps({"subreddit": subreddit, "recent_discussions": posts}, indent=2)
+    except Exception as e:
+        return json.dumps({"error": f"Failed to retrieve data from {url}: {str(e)}"}, indent=2)

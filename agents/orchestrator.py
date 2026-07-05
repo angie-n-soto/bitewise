@@ -32,7 +32,10 @@ def get_orchestrator_config(api_key: str, model: str, delegation_tools: List[Cal
         "5. Query the Nutritionist Agent to check ingredients and build a food plan.\n"
         "6. Query the Safety Agent to ensure none of the candidates have active recalls.\n"
         "7. Compile and synthesize the results into a beautiful, structured recommendation list. "
-        "Provide clear sections for Vet Guidelines, Product Recommendations (including Ingredient analysis, Recall status, and Forum reviews), and Next Steps."
+        "Provide clear sections for Vet Guidelines, Product Recommendations (including Ingredient analysis, Recall status, and Forum reviews), and Next Steps.\n"
+        "Keep the final report to roughly 300-400 words total, with 1-3 sentences per section, prioritizing clarity over exhaustiveness.\n\n"
+        "For every brand you recommend, you MUST verify that the specialist agents provided real tool-backed data before writing your summary. "
+        "If an agent returns an error or no data, or if you cannot find genuinely relevant real content, you must state plainly that no data could be retrieved for this brand. Do not generate plausible-sounding sentiment, reviews, or opinions that are not directly grounded in real tool output."
     )
     
     return LocalAgentConfig(
