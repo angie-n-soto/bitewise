@@ -63,7 +63,12 @@ async def run_live_pipeline(user_prompt: str):
                Agent(safety_cfg) as safety_agent:
                
         print("[Ready] Subagents are online and listening.")
-        
+
+        # Code-level tracking of delegation calls. This does NOT rely on the model's
+        # own narration of what it did -- it increments regardless of what the
+        # Orchestrator's final report text claims.
+        delegation_counts = {"scout": 0, "vet": 0, "review": 0, "nutritionist": 0, "safety": 0}
+
         # Define A2A delegation tools.
         # These closures capture the spawned subagent instances.
         async def query_scout_agent(query: str) -> str:
@@ -71,6 +76,7 @@ async def run_live_pipeline(user_prompt: str):
             Query the Scout Agent to search online and discover pet food brands/products based on pet requirements.
             """
             print(f"\n[A2A -> Scout Agent] Query: '{query}'")
+            delegation_counts["scout"] += 1
             for attempt in range(3):
                 try:
                     resp = await scout_agent.chat(query)
@@ -95,6 +101,7 @@ async def run_live_pipeline(user_prompt: str):
             Query the Review Agent to gather Reddit discussions and scraped reviews/sentiments about a brand.
             """
             print(f"\n[A2A -> Review Agent] Checking reviews for: '{brand_name}'")
+            delegation_counts["review"] += 1
             for attempt in range(3):
                 try:
                     resp = await review_agent.chat(f"Gather public reviews and platform sentiment for: {brand_name}")
@@ -119,6 +126,7 @@ async def run_live_pipeline(user_prompt: str):
             Query the Vet Agent to check Google Scholar or academic articles for nutritional/health guidelines.
             """
             print(f"\n[A2A -> Vet Agent] Query: '{topic}'")
+            delegation_counts["vet"] += 1
             for attempt in range(3):
                 try:
                     resp = await vet_agent.chat(topic)
@@ -143,6 +151,7 @@ async def run_live_pipeline(user_prompt: str):
             Query the Nutritionist Agent to analyze ingredients and design a tailored diet plan.
             """
             print(f"\n[A2A -> Nutritionist Agent] Analyzing ingredient profile for: {pet_profile}")
+            delegation_counts["nutritionist"] += 1
             for attempt in range(3):
                 try:
                     resp = await nutritionist_agent.chat(f"Pet Profile: {pet_profile}. Analyze ingredients: {ingredient_list}")
@@ -167,6 +176,7 @@ async def run_live_pipeline(user_prompt: str):
             Query the Safety Agent to search for active or historical FDA recalls and hazard reports.
             """
             print(f"\n[A2A -> Safety Agent] Checking safety recall history for: '{brand_name}'")
+            delegation_counts["safety"] += 1
             for attempt in range(3):
                 try:
                     resp = await safety_agent.chat(f"Check recalls for brand: {brand_name}")
@@ -211,6 +221,17 @@ async def run_live_pipeline(user_prompt: str):
                 sys.stdout.write(token)
                 sys.stdout.flush()
             print("\n-----------------------------")
+
+            # Code-level verification of delegation, independent of the report text.
+            print("\n[Delegation Summary] Tool call counts per agent:")
+            zero_call_agents = []
+            for agent_name, count in delegation_counts.items():
+                print(f"  - {agent_name}: {count} call(s)")
+                if count == 0:
+                    zero_call_agents.append(agent_name)
+            if zero_call_agents:
+                print(f"[WARNING] The following agents were NEVER called: {', '.join(zero_call_agents)}. "
+                      "The report above may not be grounded in real tool output.")
 
 
 def run_dry_run_simulation(user_prompt: str):
