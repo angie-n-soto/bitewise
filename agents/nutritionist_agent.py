@@ -1,3 +1,7 @@
+"""
+The Nutritionist Agent's job is to check a food's ingredient list and
+decide if it's actually healthy for the pet.
+"""
 from agents.sdk_loader import LocalAgentConfig
 from tools.web_scout_tools import analyze_ingredients
 

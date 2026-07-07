@@ -1,3 +1,10 @@
+"""
+These are the "tools" our AI agents can call to get information.
+
+Heads up for reviewers: most of these return made-up sample data (so the
+demo works without needing real paid APIs) -- EXCEPT fetch_reddit_rss_feed
+at the bottom, which makes a real live request to Reddit's public RSS feed.
+"""
 import json
 import urllib.request
 import urllib.parse

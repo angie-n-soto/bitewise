@@ -1,3 +1,7 @@
+"""
+Tries to load Google's real AI toolkit. If it's missing, uses simple
+pretend versions instead so the app still runs in offline "dry-run" mode.
+"""
 import sys
 
 try:

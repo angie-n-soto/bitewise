@@ -1,3 +1,7 @@
+"""
+The Vet Agent's job is to find vet-approved advice and studies about the
+pet's health condition or diet needs.
+"""
 from agents.sdk_loader import LocalAgentConfig
 from tools.web_scout_tools import search_veterinary_articles
 

@@ -1,3 +1,12 @@
+"""
+The Review Agent's job is to find real reviews and opinions from pet
+owners online. It uses two tools to do this:
+  - RSS feed: a simple, free way to grab the latest posts from a subreddit
+    (like reading a news ticker), no special account needed.
+  - Firecrawl MCP: a separate helper program (started automatically) that
+    can open review websites and pull out the readable text, like a
+    browser that only grabs the words we care about.
+"""
 from agents.sdk_loader import LocalAgentConfig, McpStdioServer, policy
 from tools.web_scout_tools import fetch_reddit_rss_feed
 import config
@@ -25,11 +34,12 @@ def get_review_config(api_key: str, model: str) -> LocalAgentConfig:
     if config.FIRECRAWL_API_KEY:
         mcp_env = {"FIRECRAWL_API_KEY": config.FIRECRAWL_API_KEY}
 
-    # Configure the MCP Stdio Server.
+    # This starts the Firecrawl MCP as its own small background program
+    # (via npx) and lets the Review Agent send it "scrape this URL" requests.
     firecrawl_server = McpStdioServer(
         name="firecrawl-mcp",
         command="npx",
-        args=["-y", "firecrawl-mcp-server"],
+        args=["-y", "firecrawl-mcp"],
         env=mcp_env
     )
     

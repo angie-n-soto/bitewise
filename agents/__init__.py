@@ -1,3 +1,7 @@
+"""
+This lists all the AI agents in our app (the Orchestrator plus 5 helper
+agents) so other files can import them easily from one place.
+"""
 from agents.orchestrator import get_orchestrator_config
 from agents.scout_agent import get_scout_config
 from agents.review_agent import get_review_config

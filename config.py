@@ -1,3 +1,8 @@
+"""
+This file holds our app's settings, like API keys and which AI model to use.
+It reads them from a hidden .env file so we never type secret keys directly
+into the code.
+"""
 import os
 from dotenv import load_dotenv
 

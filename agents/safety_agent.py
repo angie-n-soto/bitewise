@@ -1,3 +1,7 @@
+"""
+The Safety Agent's job is to check if a food brand has ever been recalled
+or flagged for safety problems.
+"""
 from agents.sdk_loader import LocalAgentConfig
 from tools.web_scout_tools import check_pet_food_recalls
 

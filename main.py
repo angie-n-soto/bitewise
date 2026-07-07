@@ -1,3 +1,9 @@
+"""
+This is the command center. It starts up all 5 helper agents plus the boss
+(Orchestrator) agent, connects them together, and runs the whole pet food
+recommendation process from start to finish. It can also run a fake
+offline demo (--dry-run) if you don't have API keys set up.
+"""
 import asyncio
 import sys
 import argparse
@@ -64,6 +70,12 @@ async def run_live_pipeline(user_prompt: str):
                
         print("[Ready] Subagents are online and listening.")
 
+        # --- Talking to the helper agents ---
+        # Each function below is how the boss agent "calls" one helper agent
+        # and waits for its answer, like sending a text and waiting for a reply.
+        # It also keeps count of how many times each helper was actually used,
+        # so we can double check the boss agent didn't skip anyone.
+        #
         # Code-level tracking of delegation calls. This does NOT rely on the model's
         # own narration of what it did -- it increments regardless of what the
         # Orchestrator's final report text claims.
@@ -206,7 +218,8 @@ async def run_live_pipeline(user_prompt: str):
         ]
         
         orchestrator_cfg = get_orchestrator_config(api_key, model, orchestrator_tools)
-        
+
+        # --- Run the boss agent and get the final answer ---
         print("[Starting] Spawning Orchestrator Agent...")
         async with Agent(orchestrator_cfg) as orchestrator:
             print("\n[Orchestrator Online] How can I help you today?")
@@ -215,12 +228,17 @@ async def run_live_pipeline(user_prompt: str):
             # Send prompt to the orchestrator
             response = await orchestrator.chat(user_prompt)
             
-            # Stream the response tokens as they arrive
+            # Stream the response tokens as they arrive, collecting them into
+            # report_text so the caller gets the clean final answer directly
+            # instead of having to parse it back out of the interleaved log.
             print("--- Recommendation Report ---")
+            report_chunks = []
             async for token in response:
                 sys.stdout.write(token)
                 sys.stdout.flush()
+                report_chunks.append(token)
             print("\n-----------------------------")
+            report_text = "".join(report_chunks)
 
             # Code-level verification of delegation, independent of the report text.
             print("\n[Delegation Summary] Tool call counts per agent:")
@@ -233,12 +251,18 @@ async def run_live_pipeline(user_prompt: str):
                 print(f"[WARNING] The following agents were NEVER called: {', '.join(zero_call_agents)}. "
                       "The report above may not be grounded in real tool output.")
 
+            return report_text
+
 
 def run_dry_run_simulation(user_prompt: str):
     """
     Simulates the agent A2A flow for dry-run verification.
     This runs offline without making real API requests.
     """
+    # --- Offline fake demo ---
+    # This just prints a scripted, made-up example of what the real agents
+    # would say, so you can see how the app works without an internet
+    # connection or API key.
     print("\n" + "="*50)
     print("      PET PARENT ADVISOR SYSTEM SIMULATION      ")
     print("="*50)
@@ -265,19 +289,26 @@ def run_dry_run_simulation(user_prompt: str):
     print(" >> [A2A -> Safety Agent] 'Check active FDA recalls for Hill's Science Diet'")
     print(" << [A2A <- Safety Agent] Safety check: 'No active recalls found in database for Hill's Science Diet.'")
     
+    report_text = (
+        "### Vet Guidelines for Stomach Sensitivity\n"
+        "A highly digestible diet with prebiotic fiber is essential. Avoid artificial additives.\n\n"
+        "### Top Recommendation: Hill's Science Diet (Sensitive Stomach & Skin)\n"
+        "- **Ingredient Assessment**: Oatmeal and prebiotic beet pulp present. Balanced formula.\n"
+        "- **Online Sentiment**: High satisfaction on r/dogfood for allergy relief.\n"
+        "- **Safety Status**: Safe (No active recalls)."
+    )
+
     print("\n[Step 7] Orchestrator compiles findings and outputs the final report.")
     print("\n--- Recommendation Report (Simulated) ---")
-    print("### Vet Guidelines for Stomach Sensitivity")
-    print("A highly digestible diet with prebiotic fiber is essential. Avoid artificial additives.")
-    print("\n### Top Recommendation: Hill's Science Diet (Sensitive Stomach & Skin)")
-    print("- **Ingredient Assessment**: Oatmeal and prebiotic beet pulp present. Balanced formula.")
-    print("- **Online Sentiment**: High satisfaction on r/dogfood for allergy relief.")
-    print("- **Safety Status**: Safe (No active recalls).")
+    print(report_text)
     print("------------------------------------------")
     print("\nDry-run simulation completed successfully!")
 
+    return report_text
+
 
 if __name__ == "__main__":
+    # --- This runs when you type "python main.py" in the terminal ---
     parser = argparse.ArgumentParser(description="Pet Parent Advisor Agentic System CLI")
     parser.add_argument(
         "--prompt", 

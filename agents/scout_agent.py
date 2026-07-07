@@ -1,3 +1,7 @@
+"""
+The Scout Agent's job is to find pet food brands and products that match
+what the pet needs.
+"""
 from agents.sdk_loader import LocalAgentConfig
 from tools.web_scout_tools import search_pet_food_brands
 

@@ -1,15 +1,22 @@
+"""
+The Orchestrator is the "boss" agent. It doesn't look anything up itself —
+it asks the 5 helper agents (Scout, Vet, Review, Nutritionist, Safety) for
+their answers, then combines everything into one final report.
+"""
 from typing import List, Callable
 from agents.sdk_loader import LocalAgentConfig
 
 def get_orchestrator_config(api_key: str, model: str, delegation_tools: List[Callable]) -> LocalAgentConfig:
     """
     Configure the Orchestrator Agent, the main interface for pet parents.
-    
+
     Args:
         api_key: The Gemini API Key.
         model: The model string.
         delegation_tools: A list of A2A callable functions representing subagents.
     """
+    # These rules stop the AI from making up an answer on its own — it must
+    # always ask the real helper agents first, and never invent fake sources.
     system_instructions = (
         "MANDATORY REQUIREMENT (read this before anything else):\n"
         "Before you write ANY part of your final report, you MUST call all five of these tools at least once each: "
