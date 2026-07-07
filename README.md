@@ -4,6 +4,19 @@ Five specialist AI agents — Scout, Vet, Review, Nutritionist, and Safety — w
 
 **Track:** Concierge Agents
 
+## Concepts Demonstrated
+
+BiteWise was built to demonstrate the core required concepts in a system that actually runs, not just describes them. The table below maps each concept to where it lives in the codebase or video — every item is something you can independently verify by opening the corresponding file or running the pipeline live, rather than taking our word for it.
+
+| Concept | Where | Evidence |
+|---|---|---|
+| **Multi-agent system (ADK)** | Code | Orchestrator + 5 specialist agents (Scout, Vet, Review, Nutritionist, Safety), each a separate `Agent` instance delegated to via A2A protocol (`query_scout_agent`, etc.) |
+| **MCP Server** | Code | Firecrawl MCP server (`McpStdioServer`, spawned via `npx`) confirmed firing via raw tool-call log inspection, returning real scraped content; Reddit RSS used as a documented, deliberate fallback where MCP access isn't available |
+| **Antigravity** | Video / Code | Built and orchestrated using the Google Antigravity SDK inside the Antigravity IDE |
+| **Security features** | Code | Input validation, retry-with-backoff on quota/connection errors, secrets loaded via `.env` (never hardcoded), and a code-level delegation counter that verifies each specialist was actually invoked — not just claimed |
+| **Deployability** | Video / Code | Dockerized with `Dockerfile`, documented `gcloud run deploy` instructions for Cloud Run |
+| **Agent Skills** | Code | Each agent governed by a dedicated `SKILL.md` (not a monolithic prompt), including explicit vet-disclaimer and partial-result-transparency instructions |
+
 ## The Problem
 
 Choosing the right food for a pet is a surprisingly fragmented research task. A pet parent trying to help a cat with vomiting, or a senior dog with a sensitive stomach, typically has to piece together an answer from at least five different kinds of sources: veterinary guidance, ingredient labels, brand marketing claims, real owner experiences on forums like Reddit, and FDA recall history. Each of these lives in a different place, uses different vocabulary, and requires a different kind of judgment to interpret. Marketing copy says a product is "premium" and "natural"; that claim means nothing without an ingredient-level check. A Reddit thread says a food "worked great" for someone's dog; that's only useful if you can separate genuine outcomes from noise. A recall notice from six months ago might be critical — or irrelevant, if it was for a different product line.
@@ -93,14 +106,16 @@ cp .env.example .env
 Open `.env` and add your **Gemini API Key**:
 ```env
 GEMINI_API_KEY=AIzaSy...
-# Optional: Add Firecrawl API key to enable deep web scraping
+# Optional: Firecrawl works for basic scraping without this key; only needed for harder-to-scrape pages
 FIRECRAWL_API_KEY=fc-your-key-here
 ```
 
 ### 3. Setup Firecrawl MCP Server (Optional)
-The Review Agent can dynamically spawn a Firecrawl MCP server in the background for deep web scraping. To enable this:
+The Review Agent can dynamically spawn a Firecrawl MCP server (`firecrawl-mcp` on npm) in the background for deep web scraping. To enable this:
 1. Ensure you have **Node.js** and `npx` installed and configured on your system PATH.
-2. Provide a valid `FIRECRAWL_API_KEY` in your `.env` file. The SDK will automatically pass this to the `firecrawl-mcp-server` subprocess when the agent needs it.
+2. Optionally provide a `FIRECRAWL_API_KEY` in your `.env` file — the SDK will pass it to the `firecrawl-mcp` subprocess when the agent needs it.
+
+We verified this directly, with and without a key set: basic page scraping (e.g. static article/product pages) works either way and returns real, verbatim scraped content. A `FIRECRAWL_API_KEY` is not required for the Review Agent to function — it likely only matters for harder cases the Firecrawl cloud tier handles (heavily JS-rendered pages, higher rate limits), which we did not specifically test. When a scrape fails (bad URL, blocked page), the agent reports that failure honestly rather than fabricating review content.
 
 ---
 
@@ -128,6 +143,8 @@ python main.py --dry-run --prompt "I have a 3-year-old cat with skin allergies. 
 ```bash
 python main.py --prompt "I need recommendations for my 7-year-old dog who has a sensitive stomach."
 ```
+
+Console output includes a `[Delegation Summary]` block after the report, showing how many times each specialist agent was actually invoked — with a `[WARNING]` line if any agent was skipped. This is a code-level check independent of the report's own text; see "Security and Resilience" and "The Journey" below for why this exists.
 
 ---
 
